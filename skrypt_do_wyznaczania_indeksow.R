@@ -68,6 +68,8 @@ write_csv(ranking, file.path(folder,"skrypty/wyznaczanie indeksow i bestow/ranki
 ##############pytania 
 #czy wyprzedaz jako filtr !!
 # struktura marek jaka jest ? sprawdzic 
+# daj jeszcze indeksy do bestow
+
 
 # patrzyc jakie grupy dalo, np pilkarskie wyklucz
 # zastanowic sie czy dodawac indeksy, ktore sa juz na tym sklepie -- czy w jakis sposob o te ilosc zmniejszac dane 
