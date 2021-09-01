@@ -2,6 +2,11 @@ library(shiny)
 library(DT)
 library(tidyverse)
 
+
+
+lista_sklepow<- read_csv("../zrzut_dane/stan_sklep.csv") %>% select(1) %>%  distinct() %>% pull()
+
+
 ui <- fluidPage(
   
   # Application title
@@ -10,10 +15,14 @@ ui <- fluidPage(
   sidebarLayout(
     
     sidebarPanel(
-      textInput("folder","sciezka do folderu z danymi",value="Z:/PRODUKT/NOWE SKLEPY/algorytm zwrotow pod zatowarowanie/skrypty/wyznaczanie indeksow i bestow"),
+      textInput("folder","Sciezka do folderu z danymi",value="Z:/PRODUKT/NOWE SKLEPY/algorytm zwrotow pod zatowarowanie/skrypty/wyznaczanie indeksow i bestow/zrzut_dane"),
+      helpText("Wskaz czy chcesz odtowarowywac konkretny sklep, jeśli nie pozostaw opcje: IGNORUJ"),
+      selectInput(inputId ="SKLEP", "Sklep do odtowarowania",
+                  choices = c("IGNORUJ",lista_sklepow),
+                  selected = "iIGNORUJ"),                  
       selectInput(inputId ="sale", "Status indeksu?",
                   choices = c("WYPRZEDAZ","NIEWYPRZEDAZ", "WSZYSTKIE"),
-                  selected = "NIE"),
+                  selected = "NIE"),     
       helpText("Wskaz ile potrzebujesz indeksow z danego depu"),
       DTOutput("my_datatable"),
       actionButton("go",label = "odswiez"),
@@ -34,11 +43,25 @@ server <- function(input, output) {
   nazwa_folderu <- reactive({input$folder})
   
   #pobieramy z tego folderu raport opracowany w odzielnym skrypcie
+  ## najpierw ranking
   ranking<-reactive({
-    nazwa_folderu1<-nazwa_folderu()
-    nazwa_pliku = list.files(file.path(nazwa_folderu1), pattern = "csv") 
-    read_csv(file.path(nazwa_folderu1, nazwa_pliku))
+    read_csv(file.path(nazwa_folderu(),"ranking.csv"))
   })
+  
+  ## nastepnie stan sklepow
+  stan_sklep<-reactive({
+    read_csv(file.path(nazwa_folderu(),"stan_sklep.csv"))
+  })
+  
+'  ## lista sklepow
+  lista_sklepow<-reactive({
+    stan_sklep() %>%  select(1) %>%  distinct() 
+  })'
+  
+  konkretny_sklep = reactive({
+    input$SKLEP
+  })
+  
   
   #pobieram informacje czy bierzemy pod uwage sale czy nie, zrobie to na odwrot, bo potem latwiej to wykorzystac
   czy_sale <- reactive({
@@ -54,7 +77,7 @@ server <- function(input, output) {
 
   dep = c('1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA')
   grup = c('BLUZA','BUTY','JEANS','KLAPKI','KURTKA','SANDAŁY','SLEEVELESS','SPODENKI','SPODNIE','T-SHIRT','BLUZA','BUTY','KLAPKI','KURTKA','SANDAŁY','SLEEVELESS','SPODENKI','SPODNIE','SUKIENKA','T-SHIRT','TIGHT','BLUZA','BUTY','KLAPKI','KURTKA','SPODENKI','SPODNIE','T-SHIRT','AKCESORIA OBUWNICZE','AKCESORIA RÓŻNE','AKCESORIA ZIMOWE','CZAPKA','OKULARY','PLECAK','TORBA','TORBA TRENINGOWA','KĄPIELÓWKI','MAJTKI','SKARPETY','SKARPETY DŁUGIE','STRÓJ KĄPIELOWY', 'BIELIZNA TERMOAKTYWNA')
-  
+ 
 
   
     #stworzenie czystej tabeli
@@ -118,8 +141,8 @@ server <- function(input, output) {
   })
   
   output$podsumowanie1 <- renderTable({
-    wynik()
-    
+    #wynik()
+    lista_sklepow()
     #potem do filtra doloz jeszcze sale
     # i dodaj dla bestow ilosci  - tak
   })  
