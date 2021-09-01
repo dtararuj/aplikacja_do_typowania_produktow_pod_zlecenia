@@ -16,14 +16,14 @@ ui <- fluidPage(
                   selected = "NIE"),
       helpText("Wskaz ile potrzebujesz indeksow z danego depu"),
       DTOutput("my_datatable"),
-      actionButton("go",label = "Plot Data"),
+      actionButton("go",label = "odswiez"),
+      downloadButton("upload","pobierz plik"),
       width = 6
     ),
     
     # Show plot
     mainPanel(
-      tableOutput("podsumowanie1"),
-      verbatimTextOutput("podsumowanie2")
+      tableOutput("podsumowanie1")
     )
   )
 )
@@ -83,7 +83,7 @@ server <- function(input, output) {
     v$data[i,j] <- k
   })  
 
-  wynik <- reactive({
+  wynik <-eventReactive(input$go,{
     ranking1<- ranking()
     #wypiszemy teraz  wszystkie indeksy
     
@@ -122,6 +122,10 @@ server <- function(input, output) {
     #potem do filtra doloz jeszcze sale
     # i dodaj dla bestow ilosci  - tak
   })  
+  
+  ## Tworzenie pliku do pobrania
+  output$upload <- downloadHandler(filename = "lista_indeksow.csv", content = function(file) {
+    write.csv(indeksy_do_sciagniecia(), file, row.names = FALSE)})
   
 }
 
