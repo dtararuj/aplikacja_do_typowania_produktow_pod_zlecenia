@@ -513,7 +513,7 @@ output$upload <- downloadHandler(filename = "lista_indeksow.csv", content = func
 
 
 
-#filt wyprzedaz lub bez
+#zrobic to w tabeli i dac tez info  ile ma byc bestow
 
 
 
