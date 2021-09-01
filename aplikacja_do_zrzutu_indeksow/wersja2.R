@@ -84,7 +84,8 @@ server <- function(input, output) {
   })  
 
   wynik <-eventReactive(input$go,{
-    ranking1<- ranking()
+    #przerobmy ranking pod katem tego czy sale czy nie
+    ranking1 <- ranking() %>%  filter(Wyprzedaz != czy_sale())
     #wypiszemy teraz  wszystkie indeksy
     
     zbior = v$data %>%  filter(ile_modeli >0)
