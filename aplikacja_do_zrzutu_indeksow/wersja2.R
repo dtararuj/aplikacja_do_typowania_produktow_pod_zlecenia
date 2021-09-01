@@ -92,7 +92,7 @@ server <- function(input, output) {
     
     #przypiszemy teraz indeksy wg edytowalnej tabeli do pustej tabeli
     for (i in 1:nrow(zbior)){
-        pelen_zbior =  bind_rows( ranking1 %>%  filter(DEPARTAMENT == zbior$Dep[i] & grupa_towarowanie == zbior$grupa[i]) %>%  head(zbior$ile_bestow[i]),pelen_zbior)
+        pelen_zbior =  bind_rows( ranking1 %>%  filter(DEPARTAMENT == zbior$Dep[i] & grupa_towarowanie == zbior$grupa[i]) %>%  head(zbior$ile_modeli[i]),pelen_zbior)
     }
     lista = pelen_zbior %>% select(1)
     
@@ -103,7 +103,7 @@ server <- function(input, output) {
     
     #przypiszemy teraz indeksy wg edytowalnej tabeli do pustej tabeli
     if (nrow(besty) < 1){
-        zbior_bestow = data.frame()
+        zbior_bestow = data.frame("KodProduktu" = "0")
     }else {
       for (i in 1:nrow(besty)){
       zbior_bestow =  bind_rows( ranking1 %>%  filter(DEPARTAMENT == besty$Dep[i] & grupa_towarowanie == besty$grupa[i]) %>%  head(besty$ile_bestow[i]),zbior_bestow)
@@ -112,8 +112,8 @@ server <- function(input, output) {
     
     lista_besty = zbior_bestow %>% select(1) %>% mutate(czy_best = "TAK")
   
-    #lista %>% left_join(lista_besty, by = "KodProduktu")
-    lista1 = lista
+    lista %>% left_join(lista_besty, by = "KodProduktu")
+    
   })
   
   output$podsumowanie1 <- renderTable({
