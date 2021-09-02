@@ -29,7 +29,7 @@ ui <- fluidPage(
       DTOutput("my_datatable"),
       actionButton("go",label = "odswiez"),
       downloadButton("upload","pobierz plik"),
-      width = 6
+      width = 8
     ),
     
     # Show plot
@@ -164,13 +164,21 @@ server <- function(input, output) {
   
     # prezentuje wynik akcji
   output$podsumowanie1 <- renderTable({
-    wynik()
+    sklep = input$SKLEP
+    if (sklep == "IGNORUJ"){
+      NULL
+    }else{
+      wynik() %>%  left_join(stan_konkretny_sklep(), by = "KodProduktu") %>% left_join(ranking(), by = "KodProduktu") %>% 
+        group_by(KATEGORIA, DEPARTAMENT, grupa_towarowanie) %>%  summarise(ILOSC = sum(ilosc), WARTOSC = sum((Wartosc_indeks/ilosc_indeks) *ilosc))
+    }
+    
+    #wynik()
     # i dodaj dla bestow ilosci  - tak
   })  
   
   ## Tworzenie pliku do pobrania
   output$upload <- downloadHandler(filename = "lista_indeksow.csv", content = function(file) {
-    write.csv(indeksy_do_sciagniecia(), file, row.names = FALSE)})
+    write.csv(wynik(), file, row.names = FALSE)})
   
 }
 

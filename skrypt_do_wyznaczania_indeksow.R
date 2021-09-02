@@ -6,10 +6,11 @@ library(readxl)
 library(writexl)
 library(xlsx)
 
-
-
+# wprowadz dane startowe:
 folder = "Z:/PRODUKT/NOWE SKLEPY/algorytm zwrotow pod zatowarowanie"
 magazyny_detalowe <-c("MAGAZYN DETAL","MAGAZYN DOMÓWIEŃ","TYMCZASOWY MAGAZYN ZATOWAROWANIA")
+
+
 
 #1 pobieranie danych
 # a)remanent sklepów
@@ -37,7 +38,7 @@ hierarchia_1$GRUPA <- hierarchia_1$GRUPA %>% toupper()
 grupy_towarowanie = read_excel(file.path(folder, "skrypty/wyznaczanie indeksow i bestow/udzialy_depow.xlsx"), sheet = "na_grupy") %>%  select(1,2,3,16) %>% mutate(GRUPA = toupper(GRUPA))
 
 
-#c)paragony
+#c)paragony z ostatnich 4 tygodni
 list.files(file.path(folder,"paragony"))->paragony_folder
 paragony<-read_csv2(paste0(file.path(folder,"paragony"),"/",paragony_folder)) 
 
@@ -60,16 +61,16 @@ rank = rank %>%  filter(ilosc_indeks >20 & KATEGORIA != "ARTYKUŁY DLA SKLEPÓW"
 rank$przedzial_ilosci = rank$ilosc_indeks %>%  cut(breaks = c(20,50, 200, 400, 800, 10000))
 
 # sortujemy wstepnie liste
-ranking = rank %>% arrange(KATEGORIA, DEPARTAMENT, grupa_towarowanie, desc(przedzial_ilosci), desc(SlsR)) %>% ungroup()
+ranking = rank %>% mutate(rotacja = ifelse(SlsU == 0,0,ilosc_indeks/(SlsU/4))) %>% arrange(KATEGORIA, DEPARTAMENT, grupa_towarowanie, desc(przedzial_ilosci), desc(SlsR)) %>% ungroup()
 
-#3 Zapiszmy stworzony plik do wykorzystania w aplikacji
-write_csv(ranking, file.path(folder,"skrypty/wyznaczanie indeksow i bestow/ranking.csv"))
-
-##############pytania 
-#czy wyprzedaz jako filtr !!
-# struktura marek jaka jest ? sprawdzic 
-# daj jeszcze indeksy do bestow
+#3 Stworze liste indeksow per sklep
+stan_sklep = stan_lista  %>%  filter(str_sub(stan_lista$Magazyn,1, 5) == "SKLEP") %>%  select(2,3,5,6) %>% 
+  group_by(Magazyn,KodProduktu) %>%  summarise(ilosc = sum(Ilosc))
 
 
-# patrzyc jakie grupy dalo, np pilkarskie wyklucz
+#4 Zapiszmy stworzony plik do wykorzystania w aplikacji
+write_csv(ranking, file.path(folder,"skrypty/wyznaczanie indeksow i bestow/zrzut_dane/ranking.csv"))
+
+write_csv(stan_sklep, file.path(folder,"skrypty/wyznaczanie indeksow i bestow/zrzut_dane/stan_sklep.csv"))
+
 # zastanowic sie czy dodawac indeksy, ktore sa juz na tym sklepie -- czy w jakis sposob o te ilosc zmniejszac dane 
