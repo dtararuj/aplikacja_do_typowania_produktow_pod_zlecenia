@@ -58,7 +58,7 @@ server <- function(input, output) {
   #przygotowuje stan sklepu tylko dla wybranego miasta
   stan_konkretny_sklep = reactive({
     sklep = input$SKLEP
-    stan_sklep() %>%  filter(Magazyn == sklep)
+    stan_sklep() %>%  filter(Magazyn == sklep) %>% group_by(Magazyn, KodProduktu) %>%  summarise(ilosc = sum(ilosc))
   })
   
   #dostosowuje ranking tylko do indeksow, ktore sa w tym konkretnym sklepie (jezeli zostal wskazany), sortuje i usuwam niepotrzebne kolumny (te dodane z joina)
@@ -178,7 +178,14 @@ server <- function(input, output) {
   
   ## Tworzenie pliku do pobrania
   output$upload <- downloadHandler(filename = "lista_indeksow.csv", content = function(file) {
-    write.csv(wynik(), file, row.names = FALSE)})
+    sklep = input$SKLEP
+    if (sklep == "IGNORUJ"){
+      write.csv(wynik(), file, row.names = FALSE)
+    } else {
+      pobierz =wynik() %>%  left_join(stan_sklep(), by = "KodProduktu") %>% select(1,5,4)
+      write_xlsx(pobierz, file)
+    }
+  })
   
 }
 

@@ -64,8 +64,8 @@ rank$przedzial_ilosci = rank$ilosc_indeks %>%  cut(breaks = c(20,50, 200, 400, 8
 ranking = rank %>% mutate(rotacja = ifelse(SlsU == 0,0,ilosc_indeks/(SlsU/4))) %>% arrange(KATEGORIA, DEPARTAMENT, grupa_towarowanie, desc(przedzial_ilosci), desc(SlsR)) %>% ungroup()
 
 #3 Stworze liste indeksow per sklep
-stan_sklep = stan_lista  %>%  filter(str_sub(stan_lista$Magazyn,1, 5) == "SKLEP") %>%  select(2,3,5,6) %>% 
-  group_by(Magazyn,KodProduktu) %>%  summarise(ilosc = sum(Ilosc))
+stan_sklep = stan_lista  %>%  filter(str_sub(stan_lista$Magazyn,1, 5) == "SKLEP") %>%  select(2,3,4,5,6) %>% 
+  group_by(Magazyn,KodProduktu,Rozmiar) %>%  summarise(ilosc = sum(Ilosc)) %>% select(1,2,4,3)
 
 
 #4 Zapiszmy stworzony plik do wykorzystania w aplikacji
