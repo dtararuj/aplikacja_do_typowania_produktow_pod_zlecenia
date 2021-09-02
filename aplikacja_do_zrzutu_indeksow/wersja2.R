@@ -3,26 +3,28 @@ library(DT)
 library(tidyverse)
 
 
-
 lista_sklepow<- read_csv("../zrzut_dane/stan_sklep.csv") %>% select(1) %>%  distinct() %>% pull()
 
 
 ui <- fluidPage(
   
   # Application title
-  titlePanel("Indeksy pod zatowarowanie"),
+  titlePanel("Wyznaczanie indeksow"),
   
   sidebarLayout(
     
     sidebarPanel(
       textInput("folder","Sciezka do folderu z danymi",value="Z:/PRODUKT/NOWE SKLEPY/algorytm zwrotow pod zatowarowanie/skrypty/wyznaczanie indeksow i bestow/zrzut_dane"),
-      helpText("Wskaz czy chcesz odtowarowywac konkretny sklep, jeśli nie pozostaw opcje: IGNORUJ"),
+      helpText("Wskaz czy chcesz odtowarowywac konkretny sklep, jesli nie pozostaw opcje: IGNORUJ - wtedy wskaze indeksy z sieci"),
       selectInput(inputId ="SKLEP", "Sklep do odtowarowania",
                   choices = c("IGNORUJ",lista_sklepow),
                   selected = "iIGNORUJ"),                  
       selectInput(inputId ="sale", "Status indeksu?",
-                  choices = c("WYPRZEDAZ","NIEWYPRZEDAZ", "WSZYSTKIE"),
-                  selected = "NIE"),     
+                  choices = c("WYPRZEDAZ","NIE WYPRZEDAZ", "WSZYSTKIE"),
+                  selected = "NIE WYPRZEDAZ"),     
+      selectInput(inputId ="kolejnosc", "Sposob sortowania?",
+                  choices = c("BESTY","KITY"),
+                  selected = "besty"),
       helpText("Wskaz ile potrzebujesz indeksow z danego depu"),
       DTOutput("my_datatable"),
       actionButton("go",label = "odswiez"),
@@ -39,7 +41,7 @@ ui <- fluidPage(
 
 server <- function(input, output) {
   
-  #podajemy nazwe folderu gdzie sa dane
+  #podajemy nazwe folderu gdzie sa dane wsadowe
   nazwa_folderu <- reactive({input$folder})
   
   #pobieramy z tego folderu raport opracowany w odzielnym skrypcie
@@ -53,17 +55,34 @@ server <- function(input, output) {
     read_csv(file.path(nazwa_folderu(),"stan_sklep.csv"))
   })
   
-'  ## lista sklepow
-  lista_sklepow<-reactive({
-    stan_sklep() %>%  select(1) %>%  distinct() 
-  })'
+  #przygotowuje stan sklepu tylko dla wybranego miasta
+  stan_konkretny_sklep = reactive({
+    sklep = input$SKLEP
+    stan_sklep() %>%  filter(Magazyn == sklep)
+  })
   
-  konkretny_sklep = reactive({
-    input$SKLEP
+  #dostosowuje ranking tylko do indeksow, ktore sa w tym konkretnym sklepie (jezeli zostal wskazany), sortuje i usuwam niepotrzebne kolumny (te dodane z joina)
+  ranking_sklep <- reactive({
+    sklep = input$SKLEP
+    if (sklep == "IGNORUJ"){
+      ranking()
+    }else{
+      ranking() %>% right_join(stan_konkretny_sklep(), by = "KodProduktu") %>% select(-Magazyn)     
+    }
+    })
+  
+  # sortoje dane ze wzgledu na wskazana opcje (besty/kity)
+  ranking_sklep_sort <- reactive({
+    sortowanie = input$kolejnosc
+    if (sortowanie == "BESTY"){
+      ranking_sklep()  
+    }else{
+      ranking_sklep() %>% arrange(KATEGORIA, DEPARTAMENT, grupa_towarowanie, desc(rotacja))     #przyjalem dla kitow ze to rotacja z calej sieci bedzie je determinowac 
+    }
   })
   
   
-  #pobieram informacje czy bierzemy pod uwage sale czy nie, zrobie to na odwrot, bo potem latwiej to wykorzystac
+  #pobieram informacje czy bierzemy pod uwage sale czy nie,(przypisanie jest troche na odwrot, ale dzieki temu latwiej bedzie to liczyc)
   czy_sale <- reactive({
     status = input$sale
     if(status == "WYPRZEDAZ"){
@@ -74,18 +93,19 @@ server <- function(input, output) {
       return(2)
     }
   })
-
+  
+  #podaje liste mozliwych departamentow i grup
   dep = c('1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA')
   grup = c('BLUZA','BUTY','JEANS','KLAPKI','KURTKA','SANDAŁY','SLEEVELESS','SPODENKI','SPODNIE','T-SHIRT','BLUZA','BUTY','KLAPKI','KURTKA','SANDAŁY','SLEEVELESS','SPODENKI','SPODNIE','SUKIENKA','T-SHIRT','TIGHT','BLUZA','BUTY','KLAPKI','KURTKA','SPODENKI','SPODNIE','T-SHIRT','AKCESORIA OBUWNICZE','AKCESORIA RÓŻNE','AKCESORIA ZIMOWE','CZAPKA','OKULARY','PLECAK','TORBA','TORBA TRENINGOWA','KĄPIELÓWKI','MAJTKI','SKARPETY','SKARPETY DŁUGIE','STRÓJ KĄPIELOWY', 'BIELIZNA TERMOAKTYWNA')
- 
-
   
-    #stworzenie czystej tabeli
+  
+  
+  #tworze czysta tabele 
   v <- reactiveValues(data = { 
-    data.frame(Dep =  dep, grupa = grup,  ile_modeli = rep(0,length(Dep)),ile_bestow = rep(0,length(Dep))) 
+    data.frame(Dep =  dep, grupa = grup,  ile_modeli = rep(0,length(dep)),ile_bestow = rep(0,length(dep))) 
   })
   
-  #output the datatable based on the dataframe (and make it editable)
+  #tworze ze zdefiniowanej tabeli jej edytowalna wersje
   output$my_datatable <- renderDT({
     DT::datatable(v$data, editable = TRUE)
   })
@@ -105,10 +125,11 @@ server <- function(input, output) {
     #write values to reactive
     v$data[i,j] <- k
   })  
-
+  
+  #przygototowuje raport z danych wsadowych i wybranych w aplikacji opcji
   wynik <-eventReactive(input$go,{
     #przerobmy ranking pod katem tego czy sale czy nie
-    ranking1 <- ranking() %>%  filter(Wyprzedaz != czy_sale())
+    ranking1 <- ranking_sklep_sort() %>%  filter(Wyprzedaz != czy_sale())
     #wypiszemy teraz  wszystkie indeksy
     
     zbior = v$data %>%  filter(ile_modeli >0)
@@ -116,7 +137,7 @@ server <- function(input, output) {
     
     #przypiszemy teraz indeksy wg edytowalnej tabeli do pustej tabeli
     for (i in 1:nrow(zbior)){
-        pelen_zbior =  bind_rows( ranking1 %>%  filter(DEPARTAMENT == zbior$Dep[i] & grupa_towarowanie == zbior$grupa[i]) %>%  head(zbior$ile_modeli[i]),pelen_zbior)
+      pelen_zbior =  bind_rows( ranking1 %>%  filter(DEPARTAMENT == zbior$Dep[i] & grupa_towarowanie == zbior$grupa[i]) %>%  head(zbior$ile_modeli[i]),pelen_zbior)
     }
     lista = pelen_zbior %>% select(1)
     
@@ -127,23 +148,23 @@ server <- function(input, output) {
     
     #przypiszemy teraz indeksy wg edytowalnej tabeli do pustej tabeli
     if (nrow(besty) < 1){
-        zbior_bestow = data.frame("KodProduktu" = "0")
+      zbior_bestow = data.frame("KodProduktu" = "0")
     }else {
       for (i in 1:nrow(besty)){
-      zbior_bestow =  bind_rows( ranking1 %>%  filter(DEPARTAMENT == besty$Dep[i] & grupa_towarowanie == besty$grupa[i]) %>%  head(besty$ile_bestow[i]),zbior_bestow)
-    } 
+        zbior_bestow =  bind_rows( ranking1 %>%  filter(DEPARTAMENT == besty$Dep[i] & grupa_towarowanie == besty$grupa[i]) %>%  head(besty$ile_bestow[i]),zbior_bestow)
+      } 
     }
     
     lista_besty = zbior_bestow %>% select(1) %>% mutate(czy_best = "TAK")
-  
+    
     lista %>% left_join(lista_besty, by = "KodProduktu")
     
   })
   
+  
+    # prezentuje wynik akcji
   output$podsumowanie1 <- renderTable({
-    #wynik()
-    lista_sklepow()
-    #potem do filtra doloz jeszcze sale
+    wynik()
     # i dodaj dla bestow ilosci  - tak
   })  
   
@@ -159,6 +180,5 @@ shinyApp(ui = ui, server = server)
 
 
 
-#ranking
-
-### dobra mam dane wsadowe, a teraz musze wyciagnac to co wpisalem, odfiltrowac ranking i go zrzucic do csv
+#dodaj opcje czy besty i sortuje od gory, czy kity i od dolu
+# zrob tak, zeby ranking filtowalo wg sklepu, a jak nic nie dasz to wcale 

@@ -11,7 +11,7 @@ ui1 = fluidPage(
   sidebarLayout(
 
     sidebarPanel(
-    textInput("folder","sciezka do folderu z danymi",value="Z:/PRODUKT/NOWE SKLEPY/algorytm zwrotow pod zatowarowanie/skrypty/wyznaczanie indeksow i bestow"),
+    textInput("folder","sciezka do folderu z danymi",value="Z:/PRODUKT/NOWE SKLEPY/algorytm zwrotow pod zatowarowanie/skrypty/wyznaczanie indeksow i bestow/zrzut_dane"),
     selectInput(inputId ="sale", "Status indeksu?",
                         choices = c("WYPRZEDAZ","NIEWYPRZEDAZ", "WSZYSTKIE"),
                         selected = "NIE"),

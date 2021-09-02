@@ -9,9 +9,7 @@ nazwa_folderu <- reactive({input$folder})
 
 #pobieramy z tego folderu raport opracowany w odzielnym skrypcie
 ranking<-reactive({
-  nazwa_folderu1<-nazwa_folderu()
-  nazwa_pliku = list.files(file.path(nazwa_folderu1), pattern = "csv") 
-  read_csv(file.path(nazwa_folderu1, nazwa_pliku))
+  read_csv(file.path(nazwa_folderu(),"ranking.csv"))
 })
 
 #pobieram informacje czy bierzemy pod uwage sale czy nie, zrobie to na odwrot, bo potem latwiej to wykorzystac
