@@ -108,13 +108,9 @@ server <- function(input, output) {
     if (statut){
        read_csv2(file.path(link,plik),show_col_types = FALSE) %>%  select(SKLEP = 2,KOD = 3,9) %>% filter(SKLEP== sklep_wykluczony & WYNIK >0) %>% select(2) %>% unique() 
     } else {
-      NULL
+      data.frame()
     }
-    
   })
-  
-  
-  
   #podaje liste mozliwych departamentow i grup
   dep = c('1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA')
   grup = c('BLUZA','BUTY','HALÓWKI','JEANS','KLAPKI','KURTKA','SANDAŁY','SLEEVELESS','SPODENKI','SPODNIE','T-SHIRT','BLUZA','BUTY','KLAPKI','KURTKA','SANDAŁY','SLEEVELESS','SPODENKI','SPODNIE','SUKIENKA','T-SHIRT','TIGHT','BLUZA','BUTY','HALÓWKI','KLAPKI','KURTKA','SPODENKI','SPODNIE','T-SHIRT','AKCESORIA OBUWNICZE','AKCESORIA RÓŻNE','AKCESORIA ZIMOWE','CZAPKA','OKULARY','PLECAK','TORBA','TORBA TRENINGOWA','KĄPIELÓWKI','MAJTKI','SKARPETY','SKARPETY DŁUGIE','STRÓJ KĄPIELOWY', 'BIELIZNA TERMOAKTYWNA')
@@ -127,7 +123,7 @@ server <- function(input, output) {
   })
   
 
-  #tworze ze zdefiniowanej tabeli jej edytowalna wersje wraz z opcja zaznaczenia i wyswietlnia stron
+  #tworze ze zdefiniowanej tabeli jej edytowalna wersje wraz z opcja zaznaczenia i wyswietlnia ilosci stron
   output$my_datatable <- renderDT({
     DT::datatable(v$data, options = list(pageLength = 20), selection = list(mode = "multiple", target = "cell"),editable = list(target = 'cell', numeric = 'all', disable = list(columns = c(1,2))))
   })
@@ -152,14 +148,22 @@ server <- function(input, output) {
   wynik <-eventReactive(input$go,{
     #przerobmy ranking pod katem tego czy sale czy nie
     ranking1 <- ranking_sklep_sort() %>%  filter(Wyprzedaz != czy_sale())
+    
+    #wykluczmy indeksy ze wskazanego sklepu, jezeli zdecydujemy sie na dolozenie indeksow, ktorych nie ma
+    indeksy = indeksy_sklep_towarowany() 
+    ranking2 <- ranking1  %>% filter(!KodProduktu %in% indeksy$KOD)
     #wypiszemy teraz  wszystkie indeksy
     
     zbior = v$data %>%  filter(ile_modeli >0)
     pelen_zbior = data.frame()
     
     #przypiszemy teraz indeksy wg edytowalnej tabeli do pustej tabeli
-    for (i in 1:nrow(zbior)){
-      pelen_zbior =  bind_rows( ranking1 %>%  filter(DEPARTAMENT == zbior$Dep[i] & grupa_towarowanie == zbior$grupa[i]) %>%  head(zbior$ile_modeli[i]),pelen_zbior)
+    if (nrow(zbior) < 1){
+      pelen_zbior = data.frame("KodProduktu" = "0")
+    }else {
+      for (i in 1:nrow(zbior)){
+      pelen_zbior =  bind_rows( ranking2 %>%  filter(DEPARTAMENT == zbior$Dep[i] & grupa_towarowanie == zbior$grupa[i]) %>%  head(zbior$ile_modeli[i]),pelen_zbior)
+      }
     }
     lista = pelen_zbior %>% select(1)
     
@@ -179,7 +183,7 @@ server <- function(input, output) {
     
     lista_besty = zbior_bestow %>% select(1) %>% mutate(czy_best = "TAK")
     
-    lista %>% left_join(lista_besty, by = "KodProduktu")
+    lista_besty %>% full_join(lista) %>%  filter(KodProduktu != "0")
     
   })
   
@@ -188,14 +192,12 @@ server <- function(input, output) {
   output$podsumowanie1 <- renderTable({
     sklep = input$SKLEP
     if (sklep == "IGNORUJ"){
-      indeksy_sklep_towarowany() #NULL
+      wynik() #NULL
     }else{
       wynik() %>%  left_join(stan_konkretny_sklep(), by = "KodProduktu") %>% left_join(ranking(), by = "KodProduktu") %>% 
         group_by(KATEGORIA, DEPARTAMENT, grupa_towarowanie) %>%  summarise(ILOSC = sum(ilosc), WARTOSC = sum((Wartosc_indeks/ilosc_indeks) *ilosc))
     }
-    
-    #wynik()
-    # i dodaj dla bestow ilosci  - tak
+  
   })  
   
   ## Tworzenie pliku do pobrania
