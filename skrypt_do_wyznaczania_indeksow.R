@@ -10,13 +10,16 @@ library(xlsx)
 folder = "Z:/PRODUKT/NOWE SKLEPY/algorytm zwrotow pod zatowarowanie"
 magazyny_detalowe <-c("MAGAZYN DETAL","MAGAZYN DOMÓWIEŃ","TYMCZASOWY MAGAZYN ZATOWAROWANIA")
 
-
-
 #1 pobieranie danych
 # a)remanent sklepów
 plik = list.files(file.path(folder,"remanent magazyn"),pattern = "csv")
 
-stan_lista = read_csv2(file.path(file.path(folder,"remanent magazyn"),plik), locale(encoding = "UTF-8",decimal_mark = ",", grouping_mark = "."), col_names = TRUE, col_types = NULL) 
+#jak nie dziala (nie ma polskich znakow to:)
+#stan_lista = read_csv2(file.path(file.path(folder,"remanent magazyn"),plik), locale(encoding = "UTF-8",decimal_mark = ",", grouping_mark = "."), col_names = TRUE, col_types = NULL) 
+stan_lista = read_csv2(file.path(file.path(folder,"remanent magazyn"),plik), col_names = TRUE, col_types = NULL) 
+
+#to nam pokaze czy sa polskie znaki
+stan_lista$Magazyn %>% unique() %>% as.data.frame() %>% select(sklep = 1) %>% mutate(sklepp = str_sub(sklep,1,10)) %>% filter(sklepp == "SKLEP TARN")
 
 # podczyszczenie listy
 stan = stan_lista %>%  filter(Magazyn %in% magazyny_detalowe | str_sub(stan_lista$Magazyn, 1, 5) == "SKLEP") %>%  select(2,3,4,5,6,7) %>% 
@@ -52,7 +55,13 @@ paragony_1 = paragony %>% select(KodProduktu = 6, ILOSC = 8, Cena = 11) %>%
 #2 Laczymy dane i tworzymy ranking
 rank = stan_na_indeks %>% left_join(paragony_1, by = "KodProduktu")  %>%  left_join(hierarchia_1, by = "KodProduktu" ) %>% 
   left_join(grupy_towarowanie, by = c("DEPARTAMENT", "KATEGORIA", "GRUPA"))
-rank[is.na(rank)] <- 0
+
+#zamienimy na dla kolumn z wartosciami:
+lista_z_wartosciami = sapply(rank, typeof) %>% as.data.frame() %>%  filter(. != "character") %>%  rownames_to_column()
+
+rank[lista_z_wartosciami[,1]][is.na(rank[lista_z_wartosciami[,1]])] <- 0
+#omijamy na w innych kolumnach
+rank %>%  na.omit()
 
 # odfiltrujemy resztki po ilosci calkowitej oraz art dla sklepow
 rank = rank %>%  filter(ilosc_indeks >20 & KATEGORIA != "ARTYKUŁY DLA SKLEPÓW")

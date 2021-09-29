@@ -3,7 +3,9 @@ library(DT)
 library(tidyverse)
 
 
-lista_sklepow<- read_csv("../zrzut_dane/stan_sklep.csv") %>% select(1) %>%  distinct() %>% pull()
+plik = list.files(file.path(folder,"remanenty"))
+
+lista_sklepow<- read_csv2(file.path(file.path(folder,"remanenty"),plik),show_col_types = FALSE) %>% select(2) %>%  distinct() %>% pull()
 
 
 ui <- fluidPage(
@@ -18,7 +20,7 @@ ui <- fluidPage(
       helpText("Wskaz czy chcesz odtowarowywac konkretny sklep, jesli nie pozostaw opcje: IGNORUJ - wtedy wskaze indeksy z sieci"),
       selectInput(inputId ="SKLEP", "Sklep do odtowarowania",
                   choices = c("IGNORUJ",lista_sklepow),
-                  selected = "iIGNORUJ"),                  
+                  selected = "IGNORUJ"),                  
       selectInput(inputId ="sale", "Status indeksu?",
                   choices = c("WYPRZEDAZ","NIE WYPRZEDAZ", "WSZYSTKIE"),
                   selected = "NIE WYPRZEDAZ"),     
@@ -26,6 +28,9 @@ ui <- fluidPage(
                   choices = c("BESTY","KITY"),
                   selected = "besty"),
       helpText("Wskaz ile potrzebujesz indeksow z danego depu"),
+      checkboxInput("czy_uwzgledniac", label = "Czy uwzgledniac indeksy, ktore są towarowanym sklepie", FALSE),
+      selectInput(inputId ="wyklucz", "Jaki sklep wykluczyć",
+                  choices = lista_sklepow, selected = NULL),  
       DTOutput("my_datatable"),
       actionButton("go",label = "odswiez"),
       downloadButton("upload","pobierz plik"),
@@ -81,7 +86,6 @@ server <- function(input, output) {
     }
   })
   
-  
   #pobieram informacje czy bierzemy pod uwage sale czy nie,(przypisanie jest troche na odwrot, ale dzieki temu latwiej bedzie to liczyc)
   czy_sale <- reactive({
     status = input$sale
@@ -94,9 +98,26 @@ server <- function(input, output) {
     }
   })
   
+  #sprawdzam indeksy, ktore sa na wskazanym do towarowania sklepie.
+  indeksy_sklep_towarowany<-reactive({
+    statut = input$czy_uwzgledniac 
+    sklep_wykluczony = input$wyklucz
+    #tutaj zakladam podobna strukture folderow
+    link = str_replace(nazwa_folderu(), "skrypty/wyznaczanie indeksow i bestow/zrzut_dane", "remanenty")
+    plik = list.files(link)
+    if (statut){
+       read_csv2(file.path(link,plik),show_col_types = FALSE) %>%  select(SKLEP = 2,KOD = 3,9) %>% filter(SKLEP== sklep_wykluczony & WYNIK >0) %>% select(2) %>% unique() 
+    } else {
+      NULL
+    }
+    
+  })
+  
+  
+  
   #podaje liste mozliwych departamentow i grup
-  dep = c('1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA')
-  grup = c('BLUZA','BUTY','JEANS','KLAPKI','KURTKA','SANDAŁY','SLEEVELESS','SPODENKI','SPODNIE','T-SHIRT','BLUZA','BUTY','KLAPKI','KURTKA','SANDAŁY','SLEEVELESS','SPODENKI','SPODNIE','SUKIENKA','T-SHIRT','TIGHT','BLUZA','BUTY','KLAPKI','KURTKA','SPODENKI','SPODNIE','T-SHIRT','AKCESORIA OBUWNICZE','AKCESORIA RÓŻNE','AKCESORIA ZIMOWE','CZAPKA','OKULARY','PLECAK','TORBA','TORBA TRENINGOWA','KĄPIELÓWKI','MAJTKI','SKARPETY','SKARPETY DŁUGIE','STRÓJ KĄPIELOWY', 'BIELIZNA TERMOAKTYWNA')
+  dep = c('1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA')
+  grup = c('BLUZA','BUTY','HALÓWKI','JEANS','KLAPKI','KURTKA','SANDAŁY','SLEEVELESS','SPODENKI','SPODNIE','T-SHIRT','BLUZA','BUTY','KLAPKI','KURTKA','SANDAŁY','SLEEVELESS','SPODENKI','SPODNIE','SUKIENKA','T-SHIRT','TIGHT','BLUZA','BUTY','HALÓWKI','KLAPKI','KURTKA','SPODENKI','SPODNIE','T-SHIRT','AKCESORIA OBUWNICZE','AKCESORIA RÓŻNE','AKCESORIA ZIMOWE','CZAPKA','OKULARY','PLECAK','TORBA','TORBA TRENINGOWA','KĄPIELÓWKI','MAJTKI','SKARPETY','SKARPETY DŁUGIE','STRÓJ KĄPIELOWY', 'BIELIZNA TERMOAKTYWNA')
   
   
   
@@ -105,9 +126,10 @@ server <- function(input, output) {
     data.frame(Dep =  dep, grupa = grup,  ile_modeli = rep(0,length(dep)),ile_bestow = rep(0,length(dep))) 
   })
   
-  #tworze ze zdefiniowanej tabeli jej edytowalna wersje
+
+  #tworze ze zdefiniowanej tabeli jej edytowalna wersje wraz z opcja zaznaczenia i wyswietlnia stron
   output$my_datatable <- renderDT({
-    DT::datatable(v$data, editable = TRUE)
+    DT::datatable(v$data, options = list(pageLength = 20), selection = list(mode = "multiple", target = "cell"),editable = list(target = 'cell', numeric = 'all', disable = list(columns = c(1,2))))
   })
   
   #when there is any edit to a cell, write that edit to the initial dataframe
@@ -166,7 +188,7 @@ server <- function(input, output) {
   output$podsumowanie1 <- renderTable({
     sklep = input$SKLEP
     if (sklep == "IGNORUJ"){
-      NULL
+      indeksy_sklep_towarowany() #NULL
     }else{
       wynik() %>%  left_join(stan_konkretny_sklep(), by = "KodProduktu") %>% left_join(ranking(), by = "KodProduktu") %>% 
         group_by(KATEGORIA, DEPARTAMENT, grupa_towarowanie) %>%  summarise(ILOSC = sum(ilosc), WARTOSC = sum((Wartosc_indeks/ilosc_indeks) *ilosc))
@@ -188,6 +210,7 @@ server <- function(input, output) {
   })
   
 }
+
 
 # Run the application 
 shinyApp(ui = ui, server = server)
