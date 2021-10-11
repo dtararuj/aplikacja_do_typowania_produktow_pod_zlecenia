@@ -2,10 +2,20 @@ library(shiny)
 library(DT)
 library(tidyverse)
 
+'
+#requirements minimum
+[1] "shiny 1.7.1"
+[1] "DT 0.19"
+[1] "tidyverse 1.3.1"
+'
+#packageVersion("shiny")
+
 
 plik = list.files(file.path(folder,"remanenty"))
+#folder = "Z:/PRODUKT/NOWE SKLEPY/algorytm zwrotow pod zatowarowanie"
 
 lista_sklepow<- read_csv2(file.path(file.path(folder,"remanenty"),plik),show_col_types = FALSE) %>% select(2) %>%  distinct() %>% pull()
+
 
 
 ui <- fluidPage(
@@ -125,7 +135,7 @@ server <- function(input, output) {
 
   #tworze ze zdefiniowanej tabeli jej edytowalna wersje wraz z opcja zaznaczenia i wyswietlnia ilosci stron
   output$my_datatable <- renderDT({
-    DT::datatable(v$data, options = list(pageLength = 20), selection = list(mode = "multiple", target = "cell"),editable = list(target = 'cell', numeric = 'all', disable = list(columns = c(1,2))))
+    DT::datatable(v$data, options = list(pageLength = 100), selection = list(mode = "multiple", target = "cell"),editable = list(target = 'cell', numeric = 'all', disable = list(columns = c(1,2))))
   })
   
   #when there is any edit to a cell, write that edit to the initial dataframe
@@ -152,8 +162,8 @@ server <- function(input, output) {
     #wykluczmy indeksy ze wskazanego sklepu, jezeli zdecydujemy sie na dolozenie indeksow, ktorych nie ma
     indeksy = indeksy_sklep_towarowany() 
     ranking2 <- ranking1  %>% filter(!KodProduktu %in% indeksy$KOD)
-    #wypiszemy teraz  wszystkie indeksy
     
+    #wypiszemy teraz  wszystkie indeksy
     zbior = v$data %>%  filter(ile_modeli >0)
     pelen_zbior = data.frame()
     
