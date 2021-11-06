@@ -1,6 +1,6 @@
 *.csv
 *.xlsx
-udzialy_depow.xlsx
+*udzialy_depow.xlsx
 
 
 *.Rhistory
