@@ -1,14 +1,16 @@
 library(shiny)
 library(DT)
 library(tidyverse)
+library(writexl)
 
 '
 #requirements minimum
 [1] "shiny 1.7.1"
 [1] "DT 0.19"
 [1] "tidyverse 1.3.1"
+[1] "writexl 1.4.0"
 '
-#packageVersion("shiny")
+#packageVersion("writexl")
 
 
 #dane wsadowe
@@ -217,8 +219,8 @@ server <- function(input, output) {
     if (sklep == "IGNORUJ"){
       write.csv(wynik(), file, row.names = FALSE)
     } else {
-      pobierz =wynik() %>%  left_join(stan_sklep(), by = "KodProduktu") %>% select(1,5,4)
-      write_xlsx(pobierz, file)
+      pobierz =wynik() %>%  left_join(stan_sklep(), by = "KodProduktu") %>% filter(Magazyn == sklep) %>% select(1,5,3,4)
+      write.csv(pobierz, file)
     }
   })
   
