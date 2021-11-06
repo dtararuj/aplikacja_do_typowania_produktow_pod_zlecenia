@@ -30,7 +30,7 @@ ui <- fluidPage(
     
     sidebarPanel(
       textInput("folder","Sciezka do folderu z danymi",value="Z:/PRODUKT/NOWE SKLEPY/algorytm zwrotow pod zatowarowanie/skrypty/wyznaczanie indeksow i bestow/zrzut_dane"),
-      helpText("Wskaz czy chcesz odtowarowywac konkretny sklep, jesli nie pozostaw opcje: IGNORUJ - wtedy wskaze indeksy z sieci"),
+      helpText("Wskaz czy chcesz odtowarowywac konkretny sklep, jesli nie pozostaw opcje: IGNORUJ - wtedy wskaze indeksy z całej sieci"),
       selectInput(inputId ="SKLEP", "Sklep do odtowarowania",
                   choices = c("IGNORUJ",lista_sklepow),
                   selected = "IGNORUJ"),                  
