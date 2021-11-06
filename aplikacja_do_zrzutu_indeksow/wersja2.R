@@ -11,17 +11,18 @@ library(tidyverse)
 #packageVersion("shiny")
 
 
+#dane wsadowe
+folder = "Z:/PRODUKT/NOWE SKLEPY/algorytm zwrotow pod zatowarowanie"
 plik = list.files(file.path(folder,"remanenty"))
-#folder = "Z:/PRODUKT/NOWE SKLEPY/algorytm zwrotow pod zatowarowanie"
 
 lista_sklepow<- read_csv2(file.path(file.path(folder,"remanenty"),plik),show_col_types = FALSE) %>% select(2) %>%  distinct() %>% pull()
 
 
+#aplikacja
 
 ui <- fluidPage(
-  
-  # Application title
-  titlePanel("Wyznaczanie indeksow"),
+  # tytul aplikacji
+  titlePanel("Wyznaczanie indeksow do zlecenia"),
   
   sidebarLayout(
     
@@ -39,7 +40,7 @@ ui <- fluidPage(
                   selected = "besty"),
       helpText("Wskaz ile potrzebujesz indeksow z danego depu"),
       checkboxInput("czy_uwzgledniac", label = "Czy uwzgledniac indeksy, ktore są towarowanym sklepie", FALSE),
-      selectInput(inputId ="wyklucz", "Jaki sklep wykluczyć",
+      selectInput(inputId ="wyklucz", "Towarowany",
                   choices = lista_sklepow, selected = NULL),  
       DTOutput("my_datatable"),
       actionButton("go",label = "odswiez"),
