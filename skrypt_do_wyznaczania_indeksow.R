@@ -84,7 +84,15 @@ rank1 = rank1 %>%  filter(ilosc_indeks >20 & KATEGORIA != "ARTYKUŁY DLA SKLEPÓ
 rank1$przedzial_ilosci = rank1$ilosc_indeks %>%  cut(breaks = c(20,50, 200, 400, 800, 10000))
 
 # sortujemy wstepnie liste
-ranking = rank1 %>% mutate(rotacja = ifelse(SlsU == 0,0,ilosc_indeks/(SlsU/4))) %>% arrange(KATEGORIA, DEPARTAMENT, grupa_towarowanie, desc(przedzial_ilosci), desc(SlsR)) %>% ungroup()
+ranking = rank1 %>% mutate(rotacja = ifelse(SlsU == 0,0,ilosc_indeks/(SlsU/4)))  %>% ungroup()
+
+# dolozmy jeszcze informacje czy dany indeks jest w ilosci wiekszej niz 60 szt na magazynie, jezeli tak to te w pierwszej kolejnosci.
+ilosc_mag = stan_lista %>%  filter(Magazyn %in% magazyny_detalowe) %>% group_by(KodProduktu) %>% summarise(EopuM = sum(Ilosc)) %>% 
+  mutate(duzy_zapas = ifelse(EopuM > 60, "TAK", "NIE"))
+
+# polacze ranking i raz jeszcze posortuje, teraz dodatkowo po tym czy jest ten duzy zapas
+ranking =ranking %>%  left_join(ilosc_mag %>% select(1,3), by = "KodProduktu") %>% arrange(KATEGORIA, DEPARTAMENT, grupa_towarowanie, desc(przedzial_ilosci),desc(duzy_zapas), desc(SlsR))
+
 
 # 3. Stworze liste indeksow per sklep
 stan_sklep = stan_lista  %>%  filter(str_sub(stan_lista$Magazyn,1, 5) == "SKLEP") %>%  select(2,3,4,5,6) %>% 
@@ -96,4 +104,3 @@ write_csv(ranking, file.path(folder,"skrypty/wyznaczanie indeksow i bestow/zrzut
 
 write_csv(stan_sklep, file.path(folder,"skrypty/wyznaczanie indeksow i bestow/zrzut_dane/stan_sklep.csv"))
 
-# zastanowic sie czy dodawac indeksy, ktore sa juz na tym sklepie -- czy w jakis sposob o te ilosc zmniejszac dane 

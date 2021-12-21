@@ -40,6 +40,8 @@ ui <- fluidPage(
       selectInput(inputId ="kolejnosc", "Sposob sortowania?",
                   choices = c("BESTY","KITY"),
                   selected = "besty"),
+      helpText("Ponizej wskaz konkretny sklep ktorych chcesz towarowac"),
+      
       selectInput(inputId ="wyklucz", "Towarowany sklep",
                   choices = lista_sklepow, selected = NULL), 
       checkboxInput("czy_uwzgledniac", label = "Czy uwzgledniac indeksy, ktore są towarowanym sklepie", FALSE),
