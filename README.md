@@ -38,37 +38,37 @@ Oprócz tego udało się również wykluczyć błąd ludzki polegający na wytyp
 ## Szczegółowy opis funkcjonalności
 ---
 
-Na wstępie wgrywamy plik ze wskazanego miejsca na serwerze
+- Na wstępie wgrywamy plik ze wskazanego miejsca na serwerze
 
 ![wgrywanie danych](foto/obraz2.png)
 
 &nbsp;
 
-Następnie możemy wskazać, który sklep chcemy odtowarować.
+- Następnie możemy wskazać, który sklep chcemy odtowarować.
 Możemy wybrać konkretny salon lub wybierać indeksy z całej sieci.
 ![a](foto/obraz3.png)
 
 &nbsp;
 
-Następnie wskazujemy czy jesteśmy zainteresowani indeskami z oferty wyprzedażowej, niewyprzedażowej czy nie ma to dla nas znaczenia.
+- Następnie wskazujemy czy jesteśmy zainteresowani indeskami z oferty wyprzedażowej, niewyprzedażowej czy nie ma to dla nas znaczenia.
 
 ![b](foto/obraz4.png)
 
 &nbsp;
 
-Kolejny krok to wybór indeksów, wskazujemy czy chcemy patrzeć i typować bestsellery czy indeksy sprzedające się najsłabiej, tzw. kity.
+- Kolejny krok to wybór indeksów, wskazujemy czy chcemy patrzeć i typować bestsellery czy indeksy sprzedające się najsłabiej, tzw. kity.
 
 ![b](foto/obraz5.png)
 
 &nbsp;
 
-W kolejnym kroku wskazujemy jaki sklep chcemy dotowarować oraz poniżej czy chcemy typować indeksy, które już znajdują się na tym sklepie. 
+- W kolejnym kroku wskazujemy jaki sklep chcemy dotowarować oraz poniżej czy chcemy typować indeksy, które już znajdują się na tym sklepie. 
 
 ![c](foto/obraz6.png)
 
 &nbsp;
 
-Głównym elementem pracy na poniżej aplikacji jest wskazanie ile modeli ma wygenerować skrypt z poszczególnej grupy towarowej. Dokonujemy tego poprzez wpisanie ilości w kolumnie ile_modeli
+- Głównym elementem pracy na poniżej aplikacji jest wskazanie ile modeli ma wygenerować skrypt z poszczególnej grupy towarowej. Dokonujemy tego poprzez wpisanie ilości w kolumnie ile_modeli
 
 Dodatkowo gdy towarujemy sklep lub chcemy wzmocnić zatowarowanie najlepszym indeksami, możemy poprzez wpisanie ilości w kolumnie ile_bestów przekazać do generowanych na końcu danych surowych informacje, które indeksy mają być potraktowane specjalnie.
 
@@ -76,7 +76,7 @@ Dodatkowo gdy towarujemy sklep lub chcemy wzmocnić zatowarowanie najlepszym ind
 
 &nbsp;
 
-Aby skrypt mógł się uruchomić należy po wgraniu wszystkich potrzebnych danych i ustawień kliknąć opcję "odśwież".
+- Aby skrypt mógł się uruchomić należy po wgraniu wszystkich potrzebnych danych i ustawień kliknąć opcję "odśwież".
 
 Wtedy skrypt wyświetli listę indeksów wraz z dopiskiem czy dany indeks ma mieć dopisek 'tak' w kolumnie czy_best (przy wybraniu opcji INGORUJ w polu Sklepy do odtowarowania) lub wartość i ilość towaru do ściągnięcia ze sklepu z danej grupy towarej (przy wybraniu jakiegoś konkretnego sklepu).
 
@@ -86,7 +86,7 @@ Wtedy skrypt wyświetli listę indeksów wraz z dopiskiem czy dany indeks ma mie
 
 &nbsp;
 
-Gdy rezultat pracy algorytmu jest satysfakcjonujący, u dołu alplikacji klikamy w opcję "pobierz plik".
+- Gdy rezultat pracy algorytmu jest satysfakcjonujący, u dołu alplikacji klikamy w opcję "pobierz plik".
 
 
 W zależności od tego czy wskazaliśmy sklep do odtowarowania otrzymamy inne dane w pliku, który pobieramy z aplikacji.  
