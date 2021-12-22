@@ -13,13 +13,6 @@ library(writexl)
 #packageVersion("writexl")
 
 
-#dane wsadowe
-folder = "Z:/PRODUKT/NOWE SKLEPY/algorytm zwrotow pod zatowarowanie"
-plik = list.files(file.path(folder,"remanenty"))
-
-lista_sklepow<- read_csv2(file.path(file.path(folder,"remanenty"),plik),show_col_types = FALSE) %>% select(2) %>%  distinct() %>% pull()
-
-
 #aplikacja
 
 ui <- fluidPage(
@@ -31,9 +24,8 @@ ui <- fluidPage(
     sidebarPanel(
       textInput("folder","Sciezka do folderu z danymi",value="Z:/PRODUKT/NOWE SKLEPY/algorytm zwrotow pod zatowarowanie/skrypty/wyznaczanie indeksow i bestow/zrzut_dane"),
       helpText("Wskaz czy chcesz odtowarowywac konkretny sklep, jesli nie pozostaw opcje: IGNORUJ - wtedy wskaze indeksy z całej sieci"),
-      selectInput(inputId ="SKLEP", "Sklep do odtowarowania",
-                  choices = c("IGNORUJ",lista_sklepow),
-                  selected = "IGNORUJ"),                  
+      uiOutput("lista_sklepow_odtowarowanie"),
+      
       selectInput(inputId ="sale", "Status indeksu?",
                   choices = c("WYPRZEDAZ","NIE WYPRZEDAZ", "WSZYSTKIE"),
                   selected = "NIE WYPRZEDAZ"),     
@@ -41,9 +33,7 @@ ui <- fluidPage(
                   choices = c("BESTY","KITY"),
                   selected = "besty"),
       helpText("Ponizej wskaz konkretny sklep ktorych chcesz towarowac"),
-      
-      selectInput(inputId ="wyklucz", "Towarowany sklep",
-                  choices = lista_sklepow, selected = NULL), 
+      uiOutput("lista_sklepow_towarowanie"),
       checkboxInput("czy_uwzgledniac", label = "Czy uwzgledniac indeksy, ktore są towarowanym sklepie", FALSE),
       helpText("Wskaz ile potrzebujesz indeksow z danego depu"),
       DTOutput("my_datatable"),
@@ -73,6 +63,28 @@ server <- function(input, output) {
   ## nastepnie stan sklepow
   stan_sklep<-reactive({
     read_csv(file.path(nazwa_folderu(),"stan_sklep.csv"))
+  })
+  
+  # dostarczenie danych do listy rozwijanej
+  ## lista sklepow
+lista_sklepow = reactive({
+    stan_sklep() %>%  select(Magazyn) %>%  distinct() %>% pull()
+})
+
+  ## definicja listy rozwijanej dla listy sklepow do odtowarowania
+  output$lista_sklepow_odtowarowanie = renderUI({
+    
+    selectInput(inputId ="SKLEP", "Sklep do odtowarowania",
+                choices = c("IGNORUJ",lista_sklepow()),
+                selected = "IGNORUJ")
+    
+  })
+  
+  ## deficja listy rozwijanej dla listy sklepow do towarowania
+  output$lista_sklepow_towarowanie = renderUI({
+    
+    selectInput(inputId ="wyklucz", "Towarowany sklep",
+              choices = lista_sklepow(), selected = NULL)
   })
   
   #przygotowuje stan sklepu tylko dla wybranego miasta
