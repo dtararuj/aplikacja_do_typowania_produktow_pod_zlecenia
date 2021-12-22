@@ -138,6 +138,7 @@ lista_sklepow = reactive({
       data.frame()
     }
   })
+  
   #podaje liste mozliwych departamentow i grup
   dep = c('1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','1_MĘŻCZYZNA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','2_KOBIETA','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','3_CHŁOPAK','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','5_AKCESORIA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA','6_BIELIZNA', '6_BIELIZNA')
   grup = c('BLUZA','BUTY','HALÓWKI','JEANS','KLAPKI','KURTKA','SANDAŁY','SLEEVELESS','SPODENKI','SPODNIE','T-SHIRT','BLUZA','BUTY','KLAPKI','KURTKA','SANDAŁY','SLEEVELESS','SPODENKI','SPODNIE','SUKIENKA','T-SHIRT','TIGHT','BLUZA','BUTY','HALÓWKI','KLAPKI','KURTKA','SPODENKI','SPODNIE','T-SHIRT','AKCESORIA OBUWNICZE','AKCESORIA RÓŻNE','AKCESORIA ZIMOWE','CZAPKI ZIMOWE','CZAPKA','OKULARY','PLECAK','TORBA','WOREK NA BUTY', 'NERKA','TORBA TRENINGOWA','KĄPIELÓWKI','MAJTKI','SKARPETY','SKARPETY DŁUGIE','DOTSY','STRÓJ KĄPIELOWY', 'BIELIZNA TERMOAKTYWNA')
@@ -145,8 +146,10 @@ lista_sklepow = reactive({
   
   
   #tworze czysta tabele 
-  v <- reactiveValues(data = { 
-    data.frame(Dep =  dep, grupa = grup,  ile_modeli = rep(0,length(dep)),ile_bestow = rep(0,length(dep))) 
+  v <- reactiveValues(
+    data = {data.frame(Dep = dep,
+                       grupa = grup, 
+                       ile_modeli = rep(0,length(dep)),ile_bestow = rep(0,length(dep))) 
   })
   
 
