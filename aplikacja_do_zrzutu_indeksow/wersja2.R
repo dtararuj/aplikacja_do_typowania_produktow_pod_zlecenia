@@ -118,7 +118,7 @@ lista_sklepow = reactive({
     status = input$sale
     if(status == "WYPRZEDAZ"){
       return(0)
-    }else if (status == "NIEWYPRZEDAZ"){
+    }else if (status == "NIE WYPRZEDAZ"){
       return(1)
     }else{
       return(2)
