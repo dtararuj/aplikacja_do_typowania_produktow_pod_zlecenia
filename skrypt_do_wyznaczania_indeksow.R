@@ -8,7 +8,7 @@ library(xlsx)
 
 # wprowadz dane startowe:
 folder = "Z:/PRODUKT/NOWE SKLEPY/algorytm zwrotow pod zatowarowanie"
-magazyny_detalowe <-c("MAGAZYN DETAL","MAGAZYN DOMÓWIEŃ","TYMCZASOWY MAGAZYN ZATOWAROWANIA","MAGAZYN WSPÓŁDZIELONY")
+magazyny_detalowe <-c("MAGAZYN DETAL","MAGAZYN DOMÓWIEŃ","TYMCZASOWY MAGAZYN ZATOWAROWANIA","MAGAZYN WSPÓŁDZIELONY", "MAGAZYN DETAL ALOKACYJNY")
 
 # marki w ktorych bierzemy skarpety kolorowe, w celu stworzenia nowej grupy
 skarpety_kolorowe_marki = c("KREBO", "COMODO", "DOTS SOCKS","KAES")
@@ -104,7 +104,7 @@ ranking = rank1 %>% mutate(rotacja = ifelse(SlsU == 0,0,ilosc_indeks/(SlsU/4))) 
 
 # dolozmy jeszcze informacje czy dany indeks jest w ilosci wiekszej niz 60 szt na magazynie, jezeli tak to te w pierwszej kolejnosci.
 ilosc_mag = stan_lista %>%  filter(Magazyn %in% magazyny_detalowe) %>% group_by(KodProduktu) %>% summarise(EopuM = sum(Ilosc)) %>% 
-  mutate(duzy_zapas = ifelse(EopuM > 60, "TAK", "NIE"))
+  mutate(duzy_zapas = ifelse(EopuM > 40, "TAK", "NIE"))
 
 # polacze ranking i raz jeszcze posortuje, teraz dodatkowo po tym czy jest ten duzy zapas
 ranking = ranking %>%  left_join(ilosc_mag %>% select(1,3), by = "KodProduktu") %>% arrange(KATEGORIA, DEPARTAMENT, grupa_towarowanie, desc(przedzial_ilosci),desc(duzy_zapas), desc(SlsR))
