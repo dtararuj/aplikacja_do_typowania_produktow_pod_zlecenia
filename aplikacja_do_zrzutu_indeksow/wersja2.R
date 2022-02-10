@@ -25,7 +25,7 @@ ui <- fluidPage(
       textInput("folder","Sciezka do folderu z danymi",value="Z:/PRODUKT/NOWE SKLEPY/algorytm zwrotow pod zatowarowanie/skrypty/wyznaczanie indeksow i bestow/zrzut_dane"),
       helpText("Wskaz czy chcesz odtowarowywac konkretny sklep, jesli nie pozostaw opcje: IGNORUJ - wtedy wskaze indeksy z całej sieci"),
       uiOutput("lista_sklepow_odtowarowanie"),
-      
+      numericInput("ilosc_min", "Minimalna ilosc indeksu w rankingu", min = 1, value = 40),
       selectInput(inputId ="sale", "Status indeksu?",
                   choices = c("WYPRZEDAZ","NIE WYPRZEDAZ", "WSZYSTKIE"),
                   selected = "NIE WYPRZEDAZ"),     
@@ -43,9 +43,11 @@ ui <- fluidPage(
     ),
     
     # Show plot
-    mainPanel(
-      tableOutput("podsumowanie1")
-    )
+    mainPanel(tabsetPanel(type = "tabs",
+                          tabPanel("Raport",tableOutput("podsumowanie1")),
+                          tabPanel("Podsumowanie",tableOutput("podsumowanie_zbiorcze"))
+      
+    ))
   )
 )
 
@@ -183,6 +185,9 @@ lista_sklepow = reactive({
     indeksy = indeksy_sklep_towarowany() 
     ranking2 <- ranking1  %>% filter(!KodProduktu %in% indeksy$KOD)
     
+    #wykluczmy indeksy o ilosci mniejszej niz wskazane przez uzytkownika minimum
+    ranking3 = ranking2 %>%  filter(ilosc_indeks > input$ilosc_min)
+    
     #wypiszemy teraz  wszystkie indeksy
     zbior = v$data %>%  filter(ile_modeli >0)
     pelen_zbior = data.frame()
@@ -192,7 +197,7 @@ lista_sklepow = reactive({
       pelen_zbior = data.frame("KodProduktu" = "0")
     }else {
       for (i in 1:nrow(zbior)){
-      pelen_zbior =  bind_rows( ranking2 %>%  filter(DEPARTAMENT == zbior$Dep[i] & grupa_towarowanie == zbior$grupa[i]) %>%  head(zbior$ile_modeli[i]),pelen_zbior)
+      pelen_zbior =  bind_rows( ranking3 %>%  filter(DEPARTAMENT == zbior$Dep[i] & grupa_towarowanie == zbior$grupa[i]) %>%  head(zbior$ile_modeli[i]),pelen_zbior)
       }
     }
     lista = pelen_zbior %>% select(1)
@@ -225,10 +230,18 @@ lista_sklepow = reactive({
       wynik() #NULL
     }else{
       wynik() %>%  left_join(stan_konkretny_sklep(), by = "KodProduktu") %>% left_join(ranking(), by = "KodProduktu") %>% 
-        group_by(KATEGORIA, DEPARTAMENT, grupa_towarowanie) %>%  summarise(ILOSC = sum(ilosc), WARTOSC = sum((Wartosc_indeks/ilosc_indeks) *ilosc))
+        group_by(KATEGORIA, DEPARTAMENT, grupa_towarowanie) %>%  summarise(ILOSC = sum(ilosc), WARTOSC = sum((Wartosc_indeks/ilosc_indeks) *ilosc), ilosc_indeksow = n_distinct(KodProduktu))
     }
   
   })  
+  
+  # podsumowanie zbiorcze co sciagniemy
+  output$podsumowanie_zbiorcze <- renderTable({
+    wynik() %>%  left_join(ranking(), by = "KodProduktu") %>% group_by(KATEGORIA, DEPARTAMENT, grupa_towarowanie) %>% 
+      summarise(ilosc_indeksow = n_distinct(KodProduktu))
+  })
+  
+  
   
   ## Tworzenie pliku do pobrania
   output$upload <- downloadHandler(filename = "lista_indeksow.csv", content = function(file) {
