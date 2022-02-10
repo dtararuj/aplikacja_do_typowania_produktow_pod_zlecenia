@@ -69,16 +69,17 @@ hierarchia_1 = hierarchia_pelna %>% select(1:4)
 hierarchia_specjalna = hierarchia_pelna %>% mutate(GRUPA_1 = ifelse(GRUPA == "TORBA" & Typ == "NERKA", "NERKI",
                                                                     ifelse(str_detect(GRUPA, "SKARPETY D") & Firma %in% skarpety_kolorowe_marki, "DOTSY",
                                                                            ifelse(GRUPA == "AKCESORIA ZIMOWE" & Typ == "CZAPKA ZIMOWA", "CZAPKI ZIMOWE",
-                                                                                  ifelse(str_detect(GRUPA, "BUTY"), "BUTY",
+                                                                                  ifelse(str_detect(GRUPA, "BUTY") & Typ != "FOOTBALL", "BUTY",
                                                                                          ifelse(Typ == "WOREK NA BUTY", "WOREK NA BUTY",
-                                                                                                ifelse(Typ == "STOPKI" | Typ == "KRÓTKIE (QUARTER)","SKARPETY",GRUPA)))))))
+                                                                                                ifelse(Typ == "FOOTBALL","HALÓWKI",
+                                                                                                       ifelse(Typ == "STOPKI" | Typ == "KRÓTKIE (QUARTER)","SKARPETY",GRUPA))))))))
 
 # dodam jeszcze przypisanie wg depow bardziej ogólnych
 grupy_towarowanie = hierarchia_specjalna %>% select(3,2,4)
 
 # c)paragony z ostatnich 4 tygodni
-list.files(file.path(folder,"paragony"))->paragony_folder
-paragony<-read_csv2(paste0(file.path(folder,"paragony"),"/",paragony_folder)) 
+paragony_folder = list.files(file.path(folder,"paragony"))
+paragony = read_csv2(paste0(file.path(folder,"paragony"),"/",paragony_folder)) 
 
 # trochę je oczyszczamy
 paragony_1 = paragony %>% select(KodProduktu = 6, ILOSC = 8, Cena = 11) %>% 
