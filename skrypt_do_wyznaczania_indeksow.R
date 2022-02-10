@@ -10,6 +10,12 @@ library(xlsx)
 folder = "Z:/PRODUKT/NOWE SKLEPY/algorytm zwrotow pod zatowarowanie"
 magazyny_detalowe <-c("MAGAZYN DETAL","MAGAZYN DOMÓWIEŃ","TYMCZASOWY MAGAZYN ZATOWAROWANIA","MAGAZYN WSPÓŁDZIELONY", "MAGAZYN DETAL ALOKACYJNY")
 
+# wskazujemy ile szt na magazynie traktujemy jako istotny zapas i z tych indeksow w pierwszej kolejnosci bysmy pobierali szt.
+istotny_zapas = 40
+
+# wskazujemy ile min szt. z indeksu musi byc, aby indeks byl pokazywany w rankingu
+min_zapas = 20
+
 # marki w ktorych bierzemy skarpety kolorowe, w celu stworzenia nowej grupy
 skarpety_kolorowe_marki = c("KREBO", "COMODO", "DOTS SOCKS","KAES")
 
@@ -94,7 +100,7 @@ rank1[lista_z_wartosciami[,1]][is.na(rank1[lista_z_wartosciami[,1]])] <- 0
 rank1 = rank1 %>%  na.omit()
 
 # odfiltrujemy resztki (male ilosci) po ilosci calkowitej oraz artykuly dla sklepow
-rank1 = rank1 %>%  filter(ilosc_indeks >20 & KATEGORIA != "ARTYKUŁY DLA SKLEPÓW")
+rank1 = rank1 %>%  filter(ilosc_indeks >min_zapas & KATEGORIA != "ARTYKUŁY DLA SKLEPÓW")
 
 # dodajmy przedzialy, by moc lepiej sortowac indeksy po sprzedazy w ramach przedzialu
 rank1$przedzial_ilosci = rank1$ilosc_indeks %>%  cut(breaks = c(20,50, 200, 400, 800, 10000))
@@ -102,13 +108,12 @@ rank1$przedzial_ilosci = rank1$ilosc_indeks %>%  cut(breaks = c(20,50, 200, 400,
 # sortujemy wstepnie liste
 ranking = rank1 %>% mutate(rotacja = ifelse(SlsU == 0,0,ilosc_indeks/(SlsU/4)))  %>% ungroup()
 
-# dolozmy jeszcze informacje czy dany indeks jest w ilosci wiekszej niz 60 szt na magazynie, jezeli tak to te w pierwszej kolejnosci.
+# dolozmy jeszcze informacje czy dany indeks jest w ilosci wiekszej niz wskazany poziom na magazynie, zaszyty w zmiennej "istotny zapas", np 40 szt , jezeli tak to te indeksy sa pokazywane w pierwszej kolejnosci.
 ilosc_mag = stan_lista %>%  filter(Magazyn %in% magazyny_detalowe) %>% group_by(KodProduktu) %>% summarise(EopuM = sum(Ilosc)) %>% 
-  mutate(duzy_zapas = ifelse(EopuM > 40, "TAK", "NIE"))
+  mutate(duzy_zapas = ifelse(EopuM > istony_zapas, "TAK", "NIE"))
 
 # polacze ranking i raz jeszcze posortuje, teraz dodatkowo po tym czy jest ten duzy zapas
-ranking = ranking %>%  left_join(ilosc_mag %>% select(1,3), by = "KodProduktu") %>% arrange(KATEGORIA, DEPARTAMENT, grupa_towarowanie, desc(przedzial_ilosci),desc(duzy_zapas), desc(SlsR))
-
+ranking = ranking %>%  left_join(ilosc_mag %>% select(1,3), by = "KodProduktu") %>% arrange(KATEGORIA, DEPARTAMENT, grupa_towarowanie,desc(duzy_zapas), desc(przedzial_ilosci), desc(SlsR))
 
 # 3. Stworze liste indeksow per sklep
 stan_sklep = stan_biezacy_lista %>%  select(Magazyn = 2, KodProduktu = 3, Rozmiar = 4,  Ilosc = 9, Wyprzedaz = 12) %>% 
