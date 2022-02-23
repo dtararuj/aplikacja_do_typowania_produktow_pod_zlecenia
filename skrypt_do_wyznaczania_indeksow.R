@@ -67,12 +67,13 @@ hierarchia_1 = hierarchia_pelna %>% select(1:4)
 
 # przerobmy hierarchie pod nasze grupy
 hierarchia_specjalna = hierarchia_pelna %>% mutate(GRUPA_1 = ifelse(GRUPA == "TORBA" & Typ == "NERKA", "NERKI",
-                                                                    ifelse(str_detect(GRUPA, "SKARPETY D") & Firma %in% skarpety_kolorowe_marki, "DOTSY",
+                                                                    ifelse(Typ == "LONGSLEEVE" | Typ == "POLO", "T-SHIRT",
+                                                                      ifelse(str_detect(GRUPA, "SKARPETY D") & Firma %in% skarpety_kolorowe_marki, "DOTSY",
                                                                            ifelse(GRUPA == "AKCESORIA ZIMOWE" & Typ == "CZAPKA ZIMOWA", "CZAPKI ZIMOWE",
                                                                                   ifelse(str_detect(GRUPA, "BUTY") & Typ != "FOOTBALL", "BUTY",
                                                                                          ifelse(Typ == "WOREK NA BUTY", "WOREK NA BUTY",
                                                                                                 ifelse(Typ == "FOOTBALL","HALÓWKI",
-                                                                                                       ifelse(Typ == "STOPKI" | Typ == "KRÓTKIE (QUARTER)","SKARPETY",GRUPA))))))))
+                                                                                                       ifelse(Typ == "STOPKI" | Typ == "KRÓTKIE (QUARTER)","SKARPETY",GRUPA)))))))))
 
 # dodam jeszcze przypisanie wg depow bardziej ogólnych
 grupy_towarowanie = hierarchia_specjalna %>% select(3,2,4)
@@ -111,7 +112,7 @@ ranking = rank1 %>% mutate(rotacja = ifelse(SlsU == 0,0,ilosc_indeks/(SlsU/4))) 
 
 # dolozmy jeszcze informacje czy dany indeks jest w ilosci wiekszej niz wskazany poziom na magazynie, zaszyty w zmiennej "istotny zapas", np 40 szt , jezeli tak to te indeksy sa pokazywane w pierwszej kolejnosci.
 ilosc_mag = stan_lista %>%  filter(Magazyn %in% magazyny_detalowe) %>% group_by(KodProduktu) %>% summarise(EopuM = sum(Ilosc)) %>% 
-  mutate(duzy_zapas = ifelse(EopuM > istony_zapas, "TAK", "NIE"))
+  mutate(duzy_zapas = ifelse(EopuM > istotny_zapas, "TAK", "NIE"))
 
 # polacze ranking i raz jeszcze posortuje, teraz dodatkowo po tym czy jest ten duzy zapas
 ranking = ranking %>%  left_join(ilosc_mag %>% select(1,3), by = "KodProduktu") %>% arrange(KATEGORIA, DEPARTAMENT, grupa_towarowanie,desc(duzy_zapas), desc(przedzial_ilosci), desc(SlsR))
