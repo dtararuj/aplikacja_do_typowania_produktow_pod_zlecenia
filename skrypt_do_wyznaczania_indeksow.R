@@ -66,7 +66,7 @@ hierarchia_pelna$GRUPA =  hierarchia_pelna$GRUPA %>% toupper()
 hierarchia_1 = hierarchia_pelna %>% select(1:4) 
 
 # przerobmy hierarchie pod nasze grupy
-hierarchia_specjalna = hierarchia_pelna %>% mutate(GRUPA_1 = ifelse(GRUPA == "TORBA" & Typ == "NERKA", "NERKI",
+hierarchia_specjalna = hierarchia_pelna %>% mutate(GRUPA_1 = ifelse(GRUPA == "TORBA" & Typ == "NERKA", "NERKA",
                                                                     ifelse(Typ == "LONGSLEEVE" | Typ == "POLO", "T-SHIRT",
                                                                       ifelse(str_detect(GRUPA, "SKARPETY D") & Firma %in% skarpety_kolorowe_marki, "DOTSY",
                                                                            ifelse(GRUPA == "AKCESORIA ZIMOWE" & Typ == "CZAPKA ZIMOWA", "CZAPKI ZIMOWE",
